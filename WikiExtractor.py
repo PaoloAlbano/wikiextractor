@@ -198,6 +198,10 @@ options = SimpleNamespace(
         'ref', 'references', 'img', 'imagemap', 'source', 'small',
         'sub', 'sup', 'indicator'
     ],
+
+
+    #if print template info without template file
+    templateInfo = False
 )
 
 ##
@@ -538,6 +542,7 @@ class Extractor(object):
         self.recursion_exceeded_2_errs = 0  # template recursion within expandTemplate()
         self.recursion_exceeded_3_errs = 0  # parameter recursion
         self.template_title_errs = 0
+        self.templateParts = []
 
     def write_output(self, out, text):
         """
@@ -554,6 +559,18 @@ class Extractor(object):
             }
             if options.print_revision:
                 json_data['revid'] = self.revid
+
+            if options.templateInfo:
+                t = []
+                for tp in self.templateParts:
+                    temp={ "name" : tp[0].strip(), "value" : [] }
+                    for l in tp[1:]:
+                        if "=" in l:
+                            k = l.split("=")
+                            temp['value'].append({k[0].strip() : k[1].strip()})
+                    t.append(temp)
+                json_data['templateInfo'] = t
+
             # We don't use json.dump(data, out) because we want to be
             # able to encode the string if the output is sys.stdout
             out_str = json.dumps(json_data, ensure_ascii=False)
@@ -968,6 +985,11 @@ class Extractor(object):
         parts = splitParts(body)
         # title is the portion before the first |
         title = parts[0].strip()
+
+        #we save info from template
+        if(len(parts) > 0):
+            self.templateParts.append(parts)
+
         title = self.expand(title)
 
         # SUBST
@@ -2619,7 +2641,8 @@ def compact(text):
         elif (line[0] == '(' and line[-1] == ')') or line.strip('.-') == '':
             continue
         elif len(headers):
-            if options.keepSections:
+            #if options.keepSections:
+            if True:
                 items = sorted(headers.items())
                 for i, v in items:
                     page.append(v)
@@ -2838,10 +2861,25 @@ def process_dump(input_file, template_file, out_file, file_size, file_compress,
     :param process_count: number of extraction processes to spawn.
     """
 
+
+    def newHookCompressed(filename, mode):
+        ext = os.path.splitext(filename)[1]
+        if ext == '.gz':
+            import gzip
+            return gzip.open(filename, mode)
+        elif ext == '.bz2':
+            import bz2
+            return bz2.BZ2File(filename, mode)
+        else:
+            return open(filename, mode, encoding='utf-8')
+
+
+
     if input_file == '-':
         input = sys.stdin
     else:
-        input = fileinput.FileInput(input_file, openhook=fileinput.hook_compressed)
+        #input = fileinput.FileInput(input_file, openhook=fileinput.hook_compressed)
+        input = fileinput.FileInput(input_file, openhook=newHookCompressed)
 
     # collect siteinfo
     for line in input:
@@ -3096,6 +3134,8 @@ def main():
                         help="compress output files using bzip")
     groupO.add_argument("--json", action="store_true",
                         help="write output in json format instead of the default one")
+    groupO.add_argument("--templateInfo", action="store_true",
+                        help="extract info from template without template file")
 
 
     groupP = parser.add_argument_group('Processing')
@@ -3147,6 +3187,7 @@ def main():
     options.keepLists = args.lists
     options.toHTML = args.html
     options.write_json = args.json
+    options.templateInfo = args.templateInfo
     options.print_revision = args.revision
     options.min_text_length = args.min_text_length
     if args.html:

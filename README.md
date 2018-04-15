@@ -33,7 +33,8 @@ The script is invoked with a Wikipedia dump file as an argument.
 The output is stored in several files of similar size in a given directory.
 Each file will contains several documents in this [document format](http://medialab.di.unipi.it/wiki/Document_Format).
 
-    usage: WikiExtractor.py [-h] [-o OUTPUT] [-b n[KMG]] [-c] [--json] [--html]
+    usage: WikiExtractor.py [-h] [-o OUTPUT] [-b n[KMG]] [-c] [--json] 
+                            [--templateInfo ] [--html]
                             [-l] [-s] [--lists] [-ns ns1,ns2]
                             [--templates TEMPLATES] [--no-templates] [-r]
                             [--min_text_length MIN_TEXT_LENGTH]
@@ -76,6 +77,7 @@ Each file will contains several documents in this [document format](http://media
                             maximum bytes per output file (default 1M)
       -c, --compress        compress output files using bzip
       --json                write output in json format instead of the default one
+      --templateInfo        save also the templates info without parse templates File (Working)
 
     Processing:
       --html                produce HTML output, subsumes --links
