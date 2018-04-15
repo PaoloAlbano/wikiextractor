@@ -81,7 +81,8 @@ if PY2:
     range = xrange  # Use Python 3 equivalent
     chr = unichr    # Use Python 3 equivalent
     text_type = unicode
-    
+    from io import open
+
     class SimpleNamespace(object):
         def __init__ (self, **kwargs):
             self.__dict__.update(kwargs)
